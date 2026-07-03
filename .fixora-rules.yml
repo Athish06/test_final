@@ -1,0 +1,2158 @@
+rules:
+- id: fixora-wrapper-terminal-deserialize-insecure-deserialization
+  patterns:
+  - pattern-inside: "def terminal_deserialize(...):\n  ..."
+  - pattern-either:
+    - pattern: pickle.loads(...)
+    - pattern: $OBJ.loads(...)
+    - pattern: loads(...)
+  message: 'Insecure Deserialization via `data`
+
+    Vulnerable Sink: Passes untrusted data directly to `pickle.loads`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id001
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: core_sinks.py
+    wraps:
+    - pickle.loads
+    modules_used:
+    - pickle
+    vulnerable_parameter: data
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: terminal_deserialize(data = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+- id: fixora-taint-terminal-deserialize-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: data
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: terminal_deserialize(...)
+  - pattern: $OBJ.terminal_deserialize(...)
+  - patterns:
+    - pattern-inside: "def terminal_deserialize(...):\n  ..."
+    - pattern: pickle.loads(...)
+  message: 'Taint tracked to vulnerable wrapper `terminal_deserialize`.
+
+    Insecure Deserialization via `data`
+
+    Vulnerable Sink: Passes untrusted data directly to `pickle.loads`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id001
+- id: fixora-wrapper-terminal-exec-command-injection
+  patterns:
+  - pattern-inside: "def terminal_exec(...):\n  ..."
+  - pattern-either:
+    - pattern: subprocess.run(...)
+    - pattern: $OBJ.run(...)
+    - pattern: run(...)
+  message: 'Command Injection via `payload`
+
+    Vulnerable Sink: Passes untrusted data directly to `subprocess.run`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id002
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: core_sinks.py
+    wraps:
+    - subprocess.run
+    modules_used:
+    - subprocess
+    vulnerable_parameter: payload
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: terminal_exec(payload = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: &id017
+    - CWE-78
+    owasp: &id018
+    - A03:2021
+- id: fixora-taint-terminal-exec-command-injection
+  mode: taint
+  pattern-sources:
+  - pattern: payload
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: terminal_exec(...)
+  - pattern: $OBJ.terminal_exec(...)
+  - patterns:
+    - pattern-inside: "def terminal_exec(...):\n  ..."
+    - pattern: subprocess.run(..., shell=True)
+  message: 'Taint tracked to vulnerable wrapper `terminal_exec`.
+
+    Command Injection via `payload`
+
+    Vulnerable Sink: Passes untrusted data directly to `subprocess.run`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id002
+- id: fixora-wrapper-terminal-fetch-ssrf
+  patterns:
+  - pattern-inside: "def terminal_fetch(...):\n  ..."
+  - pattern-either:
+    - pattern: requests.get(...)
+    - pattern: $OBJ.get(...)
+    - pattern: get(...)
+  message: 'SSRF via `target`
+
+    Vulnerable Sink: Passes untrusted data directly to `requests.get`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id003
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: HIGH
+    wrapper_defined_in: core_sinks.py
+    wraps:
+    - requests.get
+    modules_used:
+    - requests
+    vulnerable_parameter: target
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: terminal_fetch(target = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: &id014
+    - CWE-918
+    owasp: &id015
+    - A10:2021
+- id: fixora-taint-terminal-fetch-ssrf
+  mode: taint
+  pattern-sources:
+  - pattern: target
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: terminal_fetch(...)
+  - pattern: $OBJ.terminal_fetch(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.get(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.post(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.put(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.delete(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.patch(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.head(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.options(...)
+  - patterns:
+    - pattern-inside: "def terminal_fetch(...):\n  ..."
+    - pattern: requests.connect(...)
+  message: 'Taint tracked to vulnerable wrapper `terminal_fetch`.
+
+    SSRF via `target`
+
+    Vulnerable Sink: Passes untrusted data directly to `requests.get`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id003
+- id: fixora-wrapper-terminal-parse-xml-insecure-deserialization
+  patterns:
+  - pattern-inside: "def terminal_parse_xml(...):\n  ..."
+  - pattern-either:
+    - pattern: ET.fromstring(...)
+    - pattern: $OBJ.fromstring(...)
+    - pattern: fromstring(...)
+  message: 'Insecure Deserialization via `xml_content`
+
+    Vulnerable Sink: Passes untrusted data directly to `ET.fromstring`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id004
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: core_sinks.py
+    wraps:
+    - ET.fromstring
+    modules_used:
+    - xml
+    vulnerable_parameter: xml_content
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: terminal_parse_xml(xml_content = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+- id: fixora-taint-terminal-parse-xml-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: xml_content
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: terminal_parse_xml(...)
+  - pattern: $OBJ.terminal_parse_xml(...)
+  - patterns:
+    - pattern-inside: "def terminal_parse_xml(...):\n  ..."
+    - pattern: ET.fromstring(...)
+  - patterns:
+    - pattern-inside: "def terminal_parse_xml(...):\n  ..."
+    - pattern: ET.parse(...)
+  message: 'Taint tracked to vulnerable wrapper `terminal_parse_xml`.
+
+    Insecure Deserialization via `xml_content`
+
+    Vulnerable Sink: Passes untrusted data directly to `ET.fromstring`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id004
+- id: fixora-wrapper-terminal-query-sql-injection
+  patterns:
+  - pattern-inside: "def terminal_query(...):\n  ..."
+  - pattern-either:
+    - pattern: db_conn.execute(...)
+    - pattern: $OBJ.execute(...)
+    - pattern: execute(...)
+  message: 'SQL Injection via `q_string`
+
+    Vulnerable Sink: Passes untrusted data directly to `db_conn.execute`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id005
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: core_sinks.py
+    wraps:
+    - db_conn.execute
+    modules_used:
+    - sqlite3
+    vulnerable_parameter: q_string
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: terminal_query(q_string = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: &id007
+    - CWE-89
+    owasp: &id008
+    - A03:2021
+- id: fixora-taint-terminal-query-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: q_string
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: terminal_query(...)
+  - pattern: $OBJ.terminal_query(...)
+  - patterns:
+    - pattern-inside: "def terminal_query(...):\n  ..."
+    - pattern: db_conn.execute(...)
+  message: 'Taint tracked to vulnerable wrapper `terminal_query`.
+
+    SQL Injection via `q_string`
+
+    Vulnerable Sink: Passes untrusted data directly to `db_conn.execute`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id005
+- id: fixora-wrapper-terminal-read-path-traversal
+  patterns:
+  - pattern-inside: "def terminal_read(...):\n  ..."
+  - pattern-either:
+    - pattern: open(...)
+    - pattern: $OBJ.open(...)
+  message: 'Path Traversal via `filepath`
+
+    Vulnerable Sink: Passes untrusted data directly to `open`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id006
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Path Traversal
+    confidence: HIGH
+    wrapper_defined_in: core_sinks.py
+    wraps:
+    - open
+    modules_used:
+    - builtins
+    vulnerable_parameter: filepath
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: terminal_read(filepath = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: &id027
+    - CWE-22
+    owasp: &id028
+    - A01:2021
+- id: fixora-taint-terminal-read-path-traversal
+  mode: taint
+  pattern-sources:
+  - pattern: filepath
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: terminal_read(...)
+  - pattern: $OBJ.terminal_read(...)
+  - patterns:
+    - pattern-inside: "def terminal_read(...):\n  ..."
+    - pattern: open(...)
+  message: 'Taint tracked to vulnerable wrapper `terminal_read`.
+
+    Path Traversal via `filepath`
+
+    Vulnerable Sink: Passes untrusted data directly to `open`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id006
+- id: fixora-wrapper-active-record-delete-sql-injection
+  patterns:
+  - pattern-inside: "def active_record_delete(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_query(...)
+    - pattern: $OBJ.terminal_query(...)
+    - pattern: sqlite3.connect(...)
+    - pattern: $OBJ.connect(...)
+    - pattern: connect(...)
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id009
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: db_layer.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through active_record_delete in db_layer.py,
+      which calls terminal_query, reaching a dangerous sink.
+    exploit_injected_example: active_record_delete(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: terminal_query
+- id: fixora-taint-active-record-delete-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: model_id
+  - pattern: override
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: q_string
+  pattern-sinks:
+  - pattern: active_record_delete(...)
+  - pattern: $OBJ.active_record_delete(...)
+  - patterns:
+    - pattern-inside: "def active_record_delete(...):\n  ..."
+    - pattern: terminal_query(...)
+  - patterns:
+    - pattern-inside: "def active_record_delete(...):\n  ..."
+    - pattern: db_conn.execute(...)
+  message: 'Taint tracked to vulnerable wrapper `active_record_delete`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id009
+  pattern-sanitizers:
+  - pattern: int(...)
+  - pattern: parameterized_query(...)
+- id: fixora-wrapper-resolve-sql-injection
+  patterns:
+  - pattern-inside: "def resolve(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_query(...)
+    - pattern: $OBJ.terminal_query(...)
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id010
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: db_layer.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through resolve in db_layer.py, which
+      calls terminal_query, reaching a dangerous sink.
+    exploit_injected_example: resolve(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: terminal_query
+- id: fixora-taint-resolve-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: self.state.get('where', '1=1')
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: q_string
+  pattern-sinks:
+  - pattern: resolve(...)
+  - pattern: $OBJ.resolve(...)
+  - patterns:
+    - pattern-inside: "def resolve(...):\n  ..."
+    - pattern: terminal_query(..., query)
+  - patterns:
+    - pattern-inside: "def resolve(...):\n  ..."
+    - pattern: terminal_query(...)
+  message: 'Taint tracked to vulnerable wrapper `resolve`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id010
+  pattern-sanitizers:
+  - pattern: parameterized_query(...)
+  - pattern: int(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-run-complex-transaction-sql-injection
+  patterns:
+  - pattern-inside: "def run_complex_transaction(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_query(...)
+    - pattern: $OBJ.terminal_query(...)
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id011
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: db_layer.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through run_complex_transaction in
+      db_layer.py, which calls terminal_query, reaching a dangerous sink.
+    exploit_injected_example: run_complex_transaction(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: terminal_query
+- id: fixora-taint-run-complex-transaction-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: q_string
+  pattern-sinks:
+  - pattern: run_complex_transaction(...)
+  - pattern: $OBJ.run_complex_transaction(...)
+  - patterns:
+    - pattern-inside: "def run_complex_transaction(...):\n  ..."
+    - pattern: terminal_query(conn, q)
+  - patterns:
+    - pattern-inside: "def run_complex_transaction(...):\n  ..."
+    - pattern: terminal_query(...)
+  message: 'Taint tracked to vulnerable wrapper `run_complex_transaction`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id011
+  pattern-sanitizers:
+  - pattern: parameterized_query(...)
+  - pattern: int(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-inject-audit-log-sql-injection
+  patterns:
+  - pattern-inside: "def inject_audit_log(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_query(...)
+    - pattern: $OBJ.terminal_query(...)
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id012
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: decorators.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through inject_audit_log in decorators.py,
+      which calls terminal_query, reaching a dangerous sink.
+    exploit_injected_example: inject_audit_log(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: terminal_query
+- id: fixora-taint-inject-audit-log-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: kwargs['audit_note']
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: q_string
+  pattern-sinks:
+  - pattern: inject_audit_log(...)
+  - pattern: $OBJ.inject_audit_log(...)
+  - patterns:
+    - pattern-inside: "def inject_audit_log(...):\n  ..."
+    - pattern: terminal_query(sqlite3.connect(':memory:'), f"INSERT INTO audit LOG
+        '{kwargs['audit_note']}'")
+  - patterns:
+    - pattern-inside: "def inject_audit_log(...):\n  ..."
+    - pattern: terminal_query(...)
+  message: 'Taint tracked to vulnerable wrapper `inject_audit_log`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id012
+  pattern-sanitizers:
+  - pattern: parameterized_query(...)
+  - pattern: int(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-wrapper-sql-injection
+  patterns:
+  - pattern-inside: "def wrapper(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_query(...)
+    - pattern: $OBJ.terminal_query(...)
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id013
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: decorators.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through wrapper in decorators.py, which
+      calls terminal_query, reaching a dangerous sink.
+    exploit_injected_example: wrapper(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: terminal_query
+- id: fixora-taint-wrapper-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: kwargs['audit_note']
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: q_string
+  pattern-sinks:
+  - pattern: wrapper(...)
+  - pattern: $OBJ.wrapper(...)
+  - patterns:
+    - pattern-inside: "def wrapper(...):\n  ..."
+    - pattern: terminal_query(sqlite3.connect(':memory:'), f"INSERT INTO audit LOG
+        '{kwargs['audit_note']}'")
+  - patterns:
+    - pattern-inside: "def wrapper(...):\n  ..."
+    - pattern: terminal_query(...)
+  message: 'Taint tracked to vulnerable wrapper `wrapper`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id013
+  pattern-sanitizers:
+  - pattern: parameterized_query(...)
+  - pattern: int(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-execute-network-ssrf
+  patterns:
+  - pattern-inside: "def execute_network(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_fetch(...)
+    - pattern: $OBJ.terminal_fetch(...)
+  message: 'SSRF via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id016
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: HIGH
+    wrapper_defined_in: dispatch.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through execute_network in dispatch.py,
+      which calls terminal_fetch, reaching a dangerous sink.
+    exploit_injected_example: execute_network(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id014
+    owasp: *id015
+    cross_file: true
+    promoted_from: terminal_fetch
+- id: fixora-taint-execute-network-ssrf
+  mode: taint
+  pattern-sources:
+  - pattern: target
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: execute_network(...)
+  - pattern: $OBJ.execute_network(...)
+  - patterns:
+    - pattern-inside: "def execute_network(...):\n  ..."
+    - pattern: terminal_fetch(target)
+  - patterns:
+    - pattern-inside: "def execute_network(...):\n  ..."
+    - pattern: terminal_fetch(...)
+  message: 'Taint tracked to vulnerable wrapper `execute_network`.
+
+    SSRF via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id016
+  pattern-sanitizers:
+  - pattern: urlparse(...)
+  - pattern: is_safe_url(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-execute-system-command-injection
+  patterns:
+  - pattern-inside: "def execute_system(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_exec(...)
+    - pattern: $OBJ.terminal_exec(...)
+  message: 'Command Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id019
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: dispatch.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through execute_system in dispatch.py,
+      which calls terminal_exec, reaching a dangerous sink.
+    exploit_injected_example: execute_system(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id017
+    owasp: *id018
+    cross_file: true
+    promoted_from: terminal_exec
+- id: fixora-taint-execute-system-command-injection
+  mode: taint
+  pattern-sources:
+  - pattern: cmd_str
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: payload
+  pattern-sinks:
+  - pattern: execute_system(...)
+  - pattern: $OBJ.execute_system(...)
+  - patterns:
+    - pattern-inside: "def execute_system(...):\n  ..."
+    - pattern: terminal_exec(cmd_str)
+  - patterns:
+    - pattern-inside: "def execute_system(...):\n  ..."
+    - pattern: terminal_exec(...)
+  message: 'Taint tracked to vulnerable wrapper `execute_system`.
+
+    Command Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id019
+  pattern-sanitizers:
+  - pattern: shlex.quote(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-v1-ssrf-ssrf
+  patterns:
+  - pattern-inside: "def v1_ssrf(...):\n  ..."
+  - pattern-either:
+    - pattern: DynamicRouter.dispatch(...)
+    - pattern: $OBJ.dispatch(...)
+    - pattern: dispatch(...)
+  message: 'SSRF via `data.get(''target_url'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `DynamicRouter.dispatch`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id020
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - DynamicRouter.dispatch
+    modules_used:
+    - fastapi
+    vulnerable_parameter: data.get('target_url')
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: v1_ssrf(data.get('target_url') = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id014
+    owasp: *id015
+- id: fixora-taint-v1-ssrf-ssrf
+  mode: taint
+  pattern-sources:
+  - pattern: data.get('target_url')
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: request.json()
+  pattern-sinks:
+  - pattern: v1_ssrf(...)
+  - pattern: $OBJ.v1_ssrf(...)
+  - patterns:
+    - pattern-inside: "def v1_ssrf(...):\n  ..."
+    - pattern: DynamicRouter.dispatch('net', data.get('target_url'))
+  message: 'Taint tracked to vulnerable wrapper `v1_ssrf`.
+
+    SSRF via `data.get(''target_url'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `DynamicRouter.dispatch`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id020
+  pattern-sanitizers:
+  - pattern: urlparse(...)
+  - pattern: is_safe_url(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-v2-cmd-command-injection
+  patterns:
+  - pattern-inside: "def v2_cmd(...):\n  ..."
+  - pattern-either:
+    - pattern: DynamicRouter.dispatch(...)
+    - pattern: $OBJ.dispatch(...)
+    - pattern: dispatch(...)
+  message: 'Command Injection via `data.get(''cmd_array'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `DynamicRouter.dispatch`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id021
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - DynamicRouter.dispatch
+    modules_used:
+    - fastapi
+    vulnerable_parameter: data.get('cmd_array')
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: v2_cmd(data.get('cmd_array') = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id017
+    owasp: *id018
+- id: fixora-taint-v2-cmd-command-injection
+  mode: taint
+  pattern-sources:
+  - pattern: data.get('cmd_array')
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: request.json()
+  pattern-sinks:
+  - pattern: v2_cmd(...)
+  - pattern: $OBJ.v2_cmd(...)
+  - patterns:
+    - pattern-inside: "def v2_cmd(...):\n  ..."
+    - pattern: DynamicRouter.dispatch('sys', data.get('cmd_array'))
+  message: 'Taint tracked to vulnerable wrapper `v2_cmd`.
+
+    Command Injection via `data.get(''cmd_array'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `DynamicRouter.dispatch`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id021
+  pattern-sanitizers:
+  - pattern: shlex.quote(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-v4-sqli-sql-injection
+  patterns:
+  - pattern-inside: "def v4_sqli(...):\n  ..."
+  - pattern-either:
+    - pattern: ctx.resolve(...)
+    - pattern: $OBJ.resolve(...)
+    - pattern: resolve(...)
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id022
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: 1 OR 1=1 --
+    exploit_explanation: Untrusted input flows through v4_sqli in main.py, which calls
+      resolve, reaching a dangerous sink.
+    exploit_injected_example: v4_sqli(cross_file_taint = 1 OR 1=1 --)
+    impact_summary: Attackers can exfiltrate all rows from the table and bypass authorization
+      checks tied to user scoping.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: resolve
+- id: fixora-taint-v4-sqli-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: data.get('filter_clause')
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: request.json()
+  - pattern: self.state.get('where', '1=1')
+  pattern-sinks:
+  - pattern: v4_sqli(...)
+  - pattern: $OBJ.v4_sqli(...)
+  - patterns:
+    - pattern-inside: "def v4_sqli(...):\n  ..."
+    - pattern: ctx.resolve()
+  - patterns:
+    - pattern-inside: "def v4_sqli(...):\n  ..."
+    - pattern: ctx.apply_filter(data.get('filter_clause'))
+  - patterns:
+    - pattern-inside: "def v4_sqli(...):\n  ..."
+    - pattern: resolve(...)
+  message: 'Taint tracked to vulnerable wrapper `v4_sqli`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id022
+  pattern-sanitizers:
+  - pattern: parameterized_query(...)
+  - pattern: int(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-v5-reflect-command-injection
+  patterns:
+  - pattern-inside: "def v5_reflect(...):\n  ..."
+  - pattern-either:
+    - pattern: get_strategy(...)
+    - pattern: $OBJ.get_strategy(...)
+  message: 'Command Injection via `data.get(''cmd_array'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `get_strategy`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id023
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - get_strategy
+    modules_used:
+    - fastapi
+    vulnerable_parameter: data.get('cmd_array')
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Terminal sink identified for Semgrep cross-file taint engine.
+    exploit_injected_example: v5_reflect(data.get('cmd_array') = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id017
+    owasp: *id018
+- id: fixora-taint-v5-reflect-command-injection
+  mode: taint
+  pattern-sources:
+  - pattern: data.get('cmd_array')
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: request.json()
+  pattern-sinks:
+  - pattern: v5_reflect(...)
+  - pattern: $OBJ.v5_reflect(...)
+  - patterns:
+    - pattern-inside: "def v5_reflect(...):\n  ..."
+    - pattern: get_strategy('execute_system')(data.get('cmd_array'))
+  - patterns:
+    - pattern-inside: "def v5_reflect(...):\n  ..."
+    - pattern: strategy(data.get('cmd_array'))
+  message: 'Taint tracked to vulnerable wrapper `v5_reflect`.
+
+    Command Injection via `data.get(''cmd_array'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `get_strategy`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id023
+  pattern-sanitizers:
+  - pattern: shlex.quote(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-v10-deser-insecure-deserialization
+  patterns:
+  - pattern-inside: "def v10_deser(...):\n  ..."
+  - pattern-either:
+    - pattern: deep_unpack_and_deserialize(...)
+    - pattern: $OBJ.deep_unpack_and_deserialize(...)
+  message: 'Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id024
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v10_deser in main.py, which
+      calls terminal_deserialize, reaching a dangerous sink.
+    exploit_injected_example: v10_deser(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cross_file: true
+    promoted_from: deep_unpack_and_deserialize
+- id: fixora-taint-v10-deser-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: request.json()
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: data
+  pattern-sinks:
+  - pattern: v10_deser(...)
+  - pattern: $OBJ.v10_deser(...)
+  - patterns:
+    - pattern-inside: "def v10_deser(...):\n  ..."
+    - pattern: deep_unpack_and_deserialize(...)
+  - patterns:
+    - pattern-inside: "def v10_deser(...):\n  ..."
+    - pattern: pickle.loads(...)
+  message: 'Taint tracked to vulnerable wrapper `v10_deser`.
+
+    Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id024
+- id: fixora-wrapper-v19-ssrf-ssrf
+  patterns:
+  - pattern-inside: "def v19_ssrf(...):\n  ..."
+  - pattern-either:
+    - pattern: terminal_fetch(...)
+    - pattern: $OBJ.terminal_fetch(...)
+  message: 'SSRF via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id025
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v19_ssrf in main.py, which
+      calls terminal_fetch, reaching a dangerous sink.
+    exploit_injected_example: v19_ssrf(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id014
+    owasp: *id015
+    cross_file: true
+    promoted_from: terminal_fetch
+- id: fixora-taint-v19-ssrf-ssrf
+  mode: taint
+  pattern-sources:
+  - pattern: request.json()
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  - pattern: target
+  pattern-sinks:
+  - pattern: v19_ssrf(...)
+  - pattern: $OBJ.v19_ssrf(...)
+  - patterns:
+    - pattern-inside: "def v19_ssrf(...):\n  ..."
+    - pattern: terminal_fetch(t)
+  - patterns:
+    - pattern-inside: "def v19_ssrf(...):\n  ..."
+    - pattern: terminal_fetch(...)
+  message: 'Taint tracked to vulnerable wrapper `v19_ssrf`.
+
+    SSRF via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id025
+- id: fixora-wrapper-v20-ssti-insecure-deserialization
+  patterns:
+  - pattern-inside: "def v20_ssti(...):\n  ..."
+  - pattern-either:
+    - pattern: jinja2.Template(...)
+    - pattern: $OBJ.Template(...)
+    - pattern: Template(...)
+  message: 'Insecure Deserialization via `data.get(''template_string'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `jinja2.Template`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id026
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - jinja2.Template
+    modules_used:
+    - jinja2
+    vulnerable_parameter: data.get('template_string')
+    malicious_payload: load_payload("gASV...crafted_pickle...")
+    exploit_explanation: The attacker-controlled template string is passed directly
+      to the jinja2.Template function, allowing for SSTI attacks.
+    exploit_injected_example: v20_ssti(data.get('template_string') = load_payload("gASV...crafted_pickle..."))
+    impact_summary: Attackers can execute arbitrary code on the server, potentially
+      leading to data exfiltration or lateral movement.
+- id: fixora-taint-v20-ssti-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: request.json()
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v20_ssti(...)
+  - pattern: $OBJ.v20_ssti(...)
+  - patterns:
+    - pattern-inside: "def v20_ssti(...):\n  ..."
+    - pattern: jinja2.Template(global_template_cache['current']).render()
+  message: 'Taint tracked to vulnerable wrapper `v20_ssti`.
+
+    Insecure Deserialization via `data.get(''template_string'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `jinja2.Template`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id026
+- id: fixora-wrapper-v3-path-path-traversal
+  patterns:
+  - pattern-inside: "def v3_path(...):\n  ..."
+  - pattern-either:
+    - pattern: DynamicRouter.dispatch(...)
+    - pattern: $OBJ.dispatch(...)
+    - pattern: dispatch(...)
+  message: 'Path Traversal via `data.get(''filepath'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `DynamicRouter.dispatch`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id029
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Path Traversal
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - DynamicRouter.dispatch
+    modules_used:
+    - dispatch
+    vulnerable_parameter: data.get('filepath')
+    malicious_payload: read_report("../../../../etc/passwd")
+    exploit_explanation: The attacker-controlled filepath is passed directly to the
+      DynamicRouter.dispatch function, allowing for path traversal attacks.
+    exploit_injected_example: v3_path(data.get('filepath') = read_report("../../../../etc/passwd"))
+    impact_summary: Attackers can access arbitrary files on the server, potentially
+      leading to data exfiltration.
+    cwe: *id027
+    owasp: *id028
+- id: fixora-taint-v3-path-path-traversal
+  mode: taint
+  pattern-sources:
+  - pattern: request.json()
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v3_path(...)
+  - pattern: $OBJ.v3_path(...)
+  - patterns:
+    - pattern-inside: "def v3_path(...):\n  ..."
+    - pattern: DynamicRouter.dispatch('read', data.get('filepath'))
+  message: 'Taint tracked to vulnerable wrapper `v3_path`.
+
+    Path Traversal via `data.get(''filepath'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `DynamicRouter.dispatch`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id029
+- id: fixora-wrapper-v6-reflect-ssrf
+  patterns:
+  - pattern-inside: "def v6_reflect(...):\n  ..."
+  - pattern-either:
+    - pattern: get_strategy(...)
+    - pattern: $OBJ.get_strategy(...)
+    - pattern: strategy(...)
+    - pattern: $OBJ.strategy(...)
+  message: 'SSRF via `data.get(''target_url'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `get_strategy, strategy`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id030
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - get_strategy
+    - strategy
+    modules_used:
+    - dispatch
+    vulnerable_parameter: data.get('target_url')
+    malicious_payload: http://localhost:8080
+    exploit_explanation: The attacker-controlled target_url is passed directly to
+      the strategy function, allowing SSRF attacks.
+    exploit_injected_example: v6_reflect(data.get('target_url') = http://localhost:8080)
+    impact_summary: Attackers can access internal services and potentially exfiltrate
+      sensitive data.
+    cwe: *id014
+    owasp: *id015
+- id: fixora-taint-v6-reflect-ssrf
+  mode: taint
+  pattern-sources:
+  - pattern: request.json()
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v6_reflect(...)
+  - pattern: $OBJ.v6_reflect(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: strategy(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: get_strategy(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: dispatch(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: requests.get(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: requests.post(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: requests.put(...)
+  - patterns:
+    - pattern-inside: "def v6_reflect(...):\n  ..."
+    - pattern: requests.delete(...)
+  message: 'Taint tracked to vulnerable wrapper `v6_reflect`.
+
+    SSRF via `data.get(''target_url'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `get_strategy, strategy`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id030
+  pattern-sanitizers:
+  - pattern: urlparse(...)
+  - pattern: urlparse(...).netloc
+- id: fixora-wrapper-v8-cmd-command-injection
+  patterns:
+  - pattern-inside: "def v8_cmd(...):\n  ..."
+  - pattern-either:
+    - pattern: execute_callback(...)
+    - pattern: $OBJ.execute_callback(...)
+    - pattern: runner(...)
+    - pattern: $OBJ.runner(...)
+  message: 'Command Injection via `data.get(''command'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `execute_callback, runner`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id031
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps:
+    - execute_callback
+    - runner
+    modules_used:
+    - decorators
+    vulnerable_parameter: data.get('command')
+    malicious_payload: ls -la
+    exploit_explanation: The attacker-controlled command is passed directly to the
+      runner function, allowing command injection attacks.
+    exploit_injected_example: v8_cmd(data.get('command') = ls -la)
+    impact_summary: Attackers can execute arbitrary system commands and potentially
+      gain unauthorized access.
+    cwe: *id017
+    owasp: *id018
+- id: fixora-taint-v8-cmd-command-injection
+  mode: taint
+  pattern-sources:
+  - pattern: request.json()
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v8_cmd(...)
+  - pattern: $OBJ.v8_cmd(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.run(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: os.system(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: os.popen(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.call(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.check_call(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.check_output(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).communicate(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).wait(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).poll(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).send_signal(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).terminate(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).kill(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).stdin.write(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).stdout.read(...)
+  - patterns:
+    - pattern-inside: "def v8_cmd(...):\n  ..."
+    - pattern: subprocess.Popen(...).stderr.read(...)
+  message: 'Taint tracked to vulnerable wrapper `v8_cmd`.
+
+    Command Injection via `data.get(''command'')`
+
+    Vulnerable Sink: Passes untrusted data directly to `execute_callback, runner`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id031
+  pattern-sanitizers:
+  - pattern: shlex.split(...)
+  - pattern: shlex.quote(...)
+  - pattern: subprocess.run(..., shell=False)
+- id: fixora-wrapper-deep-unpack-and-deserialize-insecure-deserialization
+  pattern: "def deep_unpack_and_deserialize(...):\n  ..."
+  message: 'Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id032
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: utils.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through deep_unpack_and_deserialize
+      in utils.py, which calls terminal_deserialize, reaching a dangerous sink.
+    exploit_injected_example: deep_unpack_and_deserialize(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cross_file: true
+    promoted_from: terminal_deserialize
+- id: fixora-taint-deep-unpack-and-deserialize-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: data
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: deep_unpack_and_deserialize(...)
+  - pattern: $OBJ.deep_unpack_and_deserialize(...)
+  - patterns:
+    - pattern-inside: "def deep_unpack_and_deserialize(...):\n  ..."
+    - pattern: terminal_deserialize(...)
+  message: 'Taint tracked to vulnerable wrapper `deep_unpack_and_deserialize`.
+
+    Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id032
+- id: fixora-wrapper-parse-incoming-rpc-insecure-deserialization
+  pattern: "def parse_incoming_rpc(...):\n  ..."
+  message: 'Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id033
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: utils.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through parse_incoming_rpc in utils.py,
+      which calls terminal_parse_xml, reaching a dangerous sink.
+    exploit_injected_example: parse_incoming_rpc(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cross_file: true
+    promoted_from: terminal_parse_xml
+- id: fixora-taint-parse-incoming-rpc-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: xml_content
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: parse_incoming_rpc(...)
+  - pattern: $OBJ.parse_incoming_rpc(...)
+  - patterns:
+    - pattern-inside: "def parse_incoming_rpc(...):\n  ..."
+    - pattern: terminal_parse_xml(...)
+  message: 'Taint tracked to vulnerable wrapper `parse_incoming_rpc`.
+
+    Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id033
+- id: fixora-wrapper-v11-xxe-insecure-deserialization
+  pattern: "def v11_xxe(...):\n  ..."
+  message: 'Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id034
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v11_xxe in main.py, which calls
+      terminal_parse_xml, reaching a dangerous sink.
+    exploit_injected_example: v11_xxe(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cross_file: true
+    promoted_from: parse_incoming_rpc
+- id: fixora-taint-v11-xxe-insecure-deserialization
+  mode: taint
+  pattern-sources:
+  - pattern: xml_content
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v11_xxe(...)
+  - pattern: $OBJ.v11_xxe(...)
+  - patterns:
+    - pattern-inside: "def v11_xxe(...):\n  ..."
+    - pattern: parse_incoming_rpc(...)
+  message: 'Taint tracked to vulnerable wrapper `v11_xxe`.
+
+    Insecure Deserialization via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id034
+- id: fixora-wrapper-v16-second-command-injection
+  pattern: "def v16_second(...):\n  ..."
+  message: 'Command Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id035
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v16_second in main.py, which
+      calls terminal_exec, reaching a dangerous sink.
+    exploit_injected_example: v16_second(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id017
+    owasp: *id018
+    cross_file: true
+    promoted_from: terminal_exec
+- id: fixora-taint-v16-second-command-injection
+  mode: taint
+  pattern-sources:
+  - pattern: payload
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v16_second(...)
+  - pattern: $OBJ.v16_second(...)
+  - patterns:
+    - pattern-inside: "def v16_second(...):\n  ..."
+    - pattern: terminal_exec(...)
+  message: 'Taint tracked to vulnerable wrapper `v16_second`.
+
+    Command Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id035
+- id: fixora-wrapper-v15-sqli-sql-injection
+  pattern: "def v15_sqli(...):\n  ..."
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id036
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: 1 OR 1=1 --
+    exploit_explanation: Untrusted input flows through v15_sqli in main.py, which
+      calls run_complex_transaction, reaching a dangerous sink.
+    exploit_injected_example: v15_sqli(cross_file_taint = 1 OR 1=1 --)
+    impact_summary: Attackers can exfiltrate all rows from the table and bypass authorization
+      checks tied to user scoping.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: run_complex_transaction
+- id: fixora-taint-v15-sqli-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v15_sqli(...)
+  - pattern: $OBJ.v15_sqli(...)
+  - patterns:
+    - pattern-inside: "def v15_sqli(...):\n  ..."
+    - pattern: run_complex_transaction(...)
+  message: 'Taint tracked to vulnerable wrapper `v15_sqli`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id036
+  pattern-sanitizers:
+  - pattern: parameterized_query(...)
+  - pattern: int(...)
+  - pattern: bleach.clean(...)
+  - pattern: re.escape(...)
+- id: fixora-wrapper-v9-sqli-sql-injection
+  pattern: "def v9_sqli(...):\n  ..."
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id037
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v9_sqli in main.py, which calls
+      terminal_query, reaching a dangerous sink.
+    exploit_injected_example: v9_sqli(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: terminal_query
+- id: fixora-taint-v9-sqli-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: q_string
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v9_sqli(...)
+  - pattern: $OBJ.v9_sqli(...)
+  - patterns:
+    - pattern-inside: "def v9_sqli(...):\n  ..."
+    - pattern: terminal_query(...)
+  message: 'Taint tracked to vulnerable wrapper `v9_sqli`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id037
+- id: fixora-wrapper-v14-idor-sql-injection
+  pattern: "def v14_idor(...):\n  ..."
+  message: 'SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id038
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: SQL Injection
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v14_idor in main.py, which
+      calls terminal_query, reaching a dangerous sink.
+    exploit_injected_example: v14_idor(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id007
+    owasp: *id008
+    cross_file: true
+    promoted_from: active_record_delete
+- id: fixora-taint-v14-idor-sql-injection
+  mode: taint
+  pattern-sources:
+  - pattern: q_string
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v14_idor(...)
+  - pattern: $OBJ.v14_idor(...)
+  - patterns:
+    - pattern-inside: "def v14_idor(...):\n  ..."
+    - pattern: active_record_delete(...)
+  message: 'Taint tracked to vulnerable wrapper `v14_idor`.
+
+    SQL Injection via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id038
+- id: fixora-wrapper-read-obfuscated-file-path-traversal
+  pattern: "def read_obfuscated_file(...):\n  ..."
+  message: 'Path Traversal via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id039
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Path Traversal
+    confidence: HIGH
+    wrapper_defined_in: utils.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through read_obfuscated_file in utils.py,
+      which calls terminal_read, reaching a dangerous sink.
+    exploit_injected_example: read_obfuscated_file(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id027
+    owasp: *id028
+    cross_file: true
+    promoted_from: terminal_read
+- id: fixora-taint-read-obfuscated-file-path-traversal
+  mode: taint
+  pattern-sources:
+  - pattern: filepath
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: read_obfuscated_file(...)
+  - pattern: $OBJ.read_obfuscated_file(...)
+  - patterns:
+    - pattern-inside: "def read_obfuscated_file(...):\n  ..."
+    - pattern: terminal_read(...)
+  message: 'Taint tracked to vulnerable wrapper `read_obfuscated_file`.
+
+    Path Traversal via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id039
+- id: fixora-wrapper-v12-path-path-traversal
+  pattern: "def v12_path(...):\n  ..."
+  message: 'Path Traversal via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: &id040
+    category: security
+    technology:
+    - python
+    source: fixora-ai-analysis
+    vulnerability_type: Path Traversal
+    confidence: HIGH
+    wrapper_defined_in: main.py
+    wraps: []
+    modules_used: []
+    vulnerable_parameter: cross_file_taint
+    malicious_payload: <SEMGREP_TAINT_SINK>
+    exploit_explanation: Untrusted input flows through v12_path in main.py, which
+      calls terminal_read, reaching a dangerous sink.
+    exploit_injected_example: v12_path(cross_file_taint = <SEMGREP_TAINT_SINK>)
+    impact_summary: Depends on the upstream caller.
+    cwe: *id027
+    owasp: *id028
+    cross_file: true
+    promoted_from: read_obfuscated_file
+- id: fixora-taint-v12-path-path-traversal
+  mode: taint
+  pattern-sources:
+  - pattern: filepath
+  - pattern: request.$W(...)
+  - pattern: request.$W
+  - pattern: req.$W
+  - pattern: flask.request.$W
+  - pattern: django.http.HttpRequest.$W
+  - patterns:
+    - pattern-inside: "@$APP.$METHOD(...)\ndef $FUNC(..., $ARG, ...):\n    ..."
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (?i)^(get|post|put|delete|patch|route)$
+    - pattern: $ARG
+  pattern-sinks:
+  - pattern: v12_path(...)
+  - pattern: $OBJ.v12_path(...)
+  - patterns:
+    - pattern-inside: "def v12_path(...):\n  ..."
+    - pattern: read_obfuscated_file(...)
+  message: 'Taint tracked to vulnerable wrapper `v12_path`.
+
+    Path Traversal via `cross_file_taint`
+
+    Vulnerable Sink: Passes untrusted data directly to `dangerous sink calls`.'
+  severity: ERROR
+  languages:
+  - python
+  metadata: *id040
